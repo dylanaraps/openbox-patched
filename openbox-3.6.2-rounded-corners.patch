@@ -66,18 +66,38 @@ index 89669726..db2c7531 100644
 @@ -334,6 +334,31 @@ void frame_adjust_shape(ObFrame *self)
  #endif
  }
- 
+
 +void frame_round_corners(Window window)
 +{
 +    XWindowAttributes win_attr;
-+    XGetWindowAttributes(obt_display, window, &win_attr);
++
++    // if this returns null, the window is invalid
++    if(!XGetWindowAttributes(obt_display, window, &win_attr))
++       return;
++
 +    int width = win_attr.width + win_attr.border_width;
 +    int height = win_attr.height + win_attr.border_width;
-+    Pixmap mask = XCreatePixmap(obt_display, window, width, height, 1);
-+    XGCValues xgcv;
-+    GC shape_gc = XCreateGC(obt_display, mask, 0, &xgcv);
 +    int rad = config_theme_cornerradius;
 +    int dia = 2 * rad;
++
++    // do not try to round if the window would be smaller than the corners
++    if(width < dia || height < dia)
++       return;
++
++    Pixmap mask;
++    mask = XCreatePixmap(obt_display, window, width, height, 1);
++    // if this returns null, the mask is not drawable
++    if(!mask)
++       return;
++
++    XGCValues xgcv;
++    GC shape_gc;
++    shape_gc = shape_gcXCreateGC(obt_display, mask, 0, &xgcv);
++    if(!shape_gc) {
++       XFreePixmap(obt_display, mask);
++       return;
++    }
++
 +    XSetForeground(obt_display, shape_gc, 0);
 +    XFillRectangle(obt_display, mask, shape_gc, 0, 0, width, height);
 +    XSetForeground(obt_display, shape_gc, 1);
@@ -90,6 +110,7 @@ index 89669726..db2c7531 100644
 +    XFillRectangle(obt_display, mask, shape_gc, 0, rad, width, height-dia);
 +    XShapeCombineMask(obt_display, window, ShapeBounding, 0, 0, mask, ShapeSet);
 +    XFreePixmap(obt_display, mask);
++    XFreeGC(obt_display, shape_gc);
 +}
 +
  void frame_adjust_area(ObFrame *self, gboolean moved,
