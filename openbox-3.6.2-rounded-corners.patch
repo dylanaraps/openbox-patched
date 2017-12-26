@@ -1,16 +1,3 @@
-From 582568b08c354f4bb037bcfb00dd440a59d7cbe0 Mon Sep 17 00:00:00 2001
-From: cpoakes <cpoakes@users.noreply.github.com>
-Date: Tue, 29 Aug 2017 19:56:29 -0500
-Subject: [PATCH] openbox-3.6.2-rounded-corners
-
----
- openbox/config.c      |  8 ++++++++
- openbox/config.h      |  4 ++++
- openbox/frame.c       | 30 +++++++++++++++++++++++++++++-
- openbox/framerender.c |  7 +++++++
- openbox/menuframe.c   |  4 ++++
- 5 files changed, 52 insertions(+), 1 deletion(-)
-
 diff --git a/openbox/config.c b/openbox/config.c
 index dad5d1bf..a387335c 100644
 --- a/openbox/config.c
@@ -21,9 +8,9 @@ index dad5d1bf..a387335c 100644
  guint    config_theme_window_list_icon_size;
 +guint    config_theme_cornerradius;
 +gboolean config_theme_menuradius;
- 
+
  gchar   *config_title_layout;
- 
+
 @@ -719,6 +721,10 @@ static void parse_theme(xmlNodePtr node, gpointer d)
          else if (config_theme_window_list_icon_size > 96)
              config_theme_window_list_icon_size = 96;
@@ -32,7 +19,7 @@ index dad5d1bf..a387335c 100644
 +	config_theme_cornerradius = obt_xml_node_int(n);
 +	obt_xml_attr_bool(n, "menu", &config_theme_menuradius);
 +    }
- 
+
      for (n = obt_xml_find_node(node, "font");
           n;
 @@ -1098,6 +1104,8 @@ void config_startup(ObtXmlInst *i)
@@ -41,7 +28,7 @@ index dad5d1bf..a387335c 100644
      config_theme_window_list_icon_size = 36;
 +    config_theme_cornerradius = 0;
 +    config_theme_menuradius = TRUE;
- 
+
      config_font_activewindow = NULL;
      config_font_inactivewindow = NULL;
 diff --git a/openbox/config.h b/openbox/config.h
@@ -56,28 +43,47 @@ index 96a66cf1..5622d059 100644
 +extern guint config_theme_cornerradius;
 +/*! Display rounded corners for root and client-list menus */
 +extern gboolean config_theme_menuradius;
- 
+
  /*! The font for the active window's title */
  extern RrFont *config_font_activewindow;
 diff --git a/openbox/frame.c b/openbox/frame.c
-index 89669726..db2c7531 100644
+index 89669726..1539717c 100644
 --- a/openbox/frame.c
 +++ b/openbox/frame.c
-@@ -334,6 +334,31 @@ void frame_adjust_shape(ObFrame *self)
+@@ -334,6 +334,51 @@ void frame_adjust_shape(ObFrame *self)
  #endif
  }
- 
+
 +void frame_round_corners(Window window)
 +{
 +    XWindowAttributes win_attr;
 +    XGetWindowAttributes(obt_display, window, &win_attr);
++
++    // If this returns null, the window is invalid.
++    if(!XGetWindowAttributes(obt_display, window, &win_attr))
++        return;
++
 +    int width = win_attr.width + win_attr.border_width;
 +    int height = win_attr.height + win_attr.border_width;
-+    Pixmap mask = XCreatePixmap(obt_display, window, width, height, 1);
-+    XGCValues xgcv;
-+    GC shape_gc = XCreateGC(obt_display, mask, 0, &xgcv);
 +    int rad = config_theme_cornerradius;
 +    int dia = 2 * rad;
++
++    // do not try to round if the window would be smaller than the corners
++    if(width < dia || height < dia)
++        return;
++
++    Pixmap mask = XCreatePixmap(obt_display, window, width, height, 1);
++    // if this returns null, the mask is not drawable
++    if(!mask)
++        return;
++
++    XGCValues xgcv;
++    GC shape_gc = XCreateGC(obt_display, mask, 0, &xgcv);
++    if(!shape_gc) {
++        XFreePixmap(obt_display, mask);
++        return;
++    }
++
 +    XSetForeground(obt_display, shape_gc, 0);
 +    XFillRectangle(obt_display, mask, shape_gc, 0, 0, width, height);
 +    XSetForeground(obt_display, shape_gc, 1);
@@ -90,20 +96,21 @@ index 89669726..db2c7531 100644
 +    XFillRectangle(obt_display, mask, shape_gc, 0, rad, width, height-dia);
 +    XShapeCombineMask(obt_display, window, ShapeBounding, 0, 0, mask, ShapeSet);
 +    XFreePixmap(obt_display, mask);
++    XFreeGC(obt_display, shape_gc);
 +}
 +
  void frame_adjust_area(ObFrame *self, gboolean moved,
                         gboolean resized, gboolean fake)
  {
-@@ -857,7 +882,6 @@ void frame_adjust_area(ObFrame *self, gboolean moved,
- 
+@@ -857,7 +902,6 @@ void frame_adjust_area(ObFrame *self, gboolean moved,
+
          if (resized) {
              self->need_render = TRUE;
 -            framerender_frame(self);
              frame_adjust_shape(self);
          }
- 
-@@ -884,7 +908,9 @@ void frame_adjust_area(ObFrame *self, gboolean moved,
+
+@@ -884,7 +928,9 @@ void frame_adjust_area(ObFrame *self, gboolean moved,
      {
          XResizeWindow(obt_display, self->label, self->label_width,
                        ob_rr_theme->label_height);
@@ -111,16 +118,16 @@ index 89669726..db2c7531 100644
      }
 +    framerender_frame(self);
  }
- 
+
  static void frame_adjust_cursors(ObFrame *self)
-@@ -958,6 +984,8 @@ void frame_adjust_client_area(ObFrame *self)
+@@ -958,6 +1004,8 @@ void frame_adjust_client_area(ObFrame *self)
      XMoveResizeWindow(obt_display, self->backfront, 0, 0,
                        self->client->area.width,
                        self->client->area.height);
 +    self->need_render = TRUE;
 +    framerender_frame(self);
  }
- 
+
  void frame_adjust_state(ObFrame *self)
 diff --git a/openbox/framerender.c b/openbox/framerender.c
 index 094d5962..54046580 100644
@@ -133,11 +140,11 @@ index 094d5962..54046580 100644
 +#include "config.h"
  #include "framerender.h"
  #include "obrender/theme.h"
- 
+
 @@ -42,6 +43,12 @@ void framerender_frame(ObFrame *self)
          return;
      self->need_render = FALSE;
- 
+
 +    if (config_theme_cornerradius &&
 +            !self->client->fullscreen &&
 +            !self->client->shaped &&
@@ -146,7 +153,7 @@ index 094d5962..54046580 100644
 +
      {
          gulong px;
- 
+
 diff --git a/openbox/menuframe.c b/openbox/menuframe.c
 index c37fdcc5..f598cf15 100644
 --- a/openbox/menuframe.c
@@ -154,21 +161,18 @@ index c37fdcc5..f598cf15 100644
 @@ -17,6 +17,7 @@
     See the COPYING file for a copy of the GNU General Public License.
  */
- 
+
 +#include "frame.h"
  #include "menuframe.h"
  #include "client.h"
  #include "menu.h"
 @@ -845,6 +846,9 @@ void menu_frame_render(ObMenuFrame *self)
- 
+
      RECT_SET_SIZE(self->area, w, h);
- 
+
 +    if (config_theme_menuradius)
 +        frame_round_corners(self->window);
 +
      XFlush(obt_display);
  }
- 
--- 
-2.14.1
 
