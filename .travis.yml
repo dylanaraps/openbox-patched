@@ -1,6 +1,6 @@
 sudo: required
 arch:
     script:
-      - "makepkg"
+      - "makepkg -s | yes"
 script:
     - "curl -s https://raw.githubusercontent.com/mikkeloscar/arch-travis/master/arch-travis.sh | bash"
