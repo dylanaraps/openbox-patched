@@ -34,11 +34,6 @@ The patch also takes an argument for menu corners.
     '<cornerRadius menu="yes">8</cornerRadius>'
 
 
-**Issues/Quirks**
-
-- [x] ~~Docked windows have rounded corners.~~
-- [x] ~~Fullscreen windows have rounded corners.~~
-
 
 ### Fix out of bounds
 
