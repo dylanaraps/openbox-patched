@@ -56,7 +56,6 @@ index 89669726..1539717c 100644
 
 +void frame_round_corners(Window window)
 +{
-+{
 +    XWindowAttributes win_attr;
 +    XGetWindowAttributes(obt_display, window, &win_attr);
 +
