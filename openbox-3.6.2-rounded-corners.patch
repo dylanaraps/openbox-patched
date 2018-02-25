@@ -63,8 +63,8 @@ index 89669726..1539717c 100644
 +    if(!XGetWindowAttributes(obt_display, window, &win_attr))
 +        return;
 +
-+    int width = win_attr.width + win_attr.border_width;
-+    int height = win_attr.height + win_attr.border_width;
++    int width = win_attr.border_width * 2 + win_attr.width;
++    int height = win_attr.border_width * 2 + win_attr.height;
 +    int rad = config_theme_cornerradius;
 +    int dia = 2 * rad;
 +
@@ -94,7 +94,7 @@ index 89669726..1539717c 100644
 +        0, 23040);
 +    XFillRectangle(obt_display, mask, shape_gc, rad, 0, width-dia, height);
 +    XFillRectangle(obt_display, mask, shape_gc, 0, rad, width, height-dia);
-+    XShapeCombineMask(obt_display, window, ShapeBounding, 0, 0, mask, ShapeSet);
++    XShapeCombineMask(obt_display, window, ShapeBounding, 0-win_attr.border_width, 0-win_attr.border_width, mask, ShapeSet);
 +    XFreePixmap(obt_display, mask);
 +    XFreeGC(obt_display, shape_gc);
 +}
