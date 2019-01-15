@@ -25,7 +25,7 @@ This patch adds support for rounded corners to Openbox.
 
 **Enabling rounded corners:**
 
-To enable Rounded Corners add this line to the '<theme>' section of your Openbox config.
+To enable Rounded Corners add this line to the '\<theme>' section of your Openbox config.
 
     '<cornerRadius>8</cornerRadius>'
 
