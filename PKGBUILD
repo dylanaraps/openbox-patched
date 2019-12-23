@@ -36,7 +36,7 @@ source=("http://openbox.org/dist/openbox/${_pkgname}-${pkgver}.tar.gz"
 md5sums=('b72794996c6a3ad94634727b95f9d204'
          '0a11d7149da210a31ef88f8a9c717711'
          '5be4554431e555084026631898f167aa'
-         'bafd26f495d40fa92838be1c866b32c9'
+         'b0b642c5d23230c0e4ec0884da769d08'
          '4c28a1482a2aeb58415cec39f7f3a694')
 install="${pkgname}.install"
 

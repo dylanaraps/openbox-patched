@@ -33,6 +33,10 @@ The patch also takes an argument for menu corners.
 
     '<cornerRadius menu="yes">8</cornerRadius>'
 
+The patch also takes an argument for the bottom corners.
+
+    '<cornerRadius bottom="yes">8</cornerRadius>'
+
 
 
 ### Fix out of bounds
