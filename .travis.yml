@@ -1,5 +1,15 @@
 sudo: required
-arch:
+archlinux:
+    packages:
+    - startup-notification
+    - libxml2
+    - libxinerama
+    - libxrandr
+    - libxcursor
+    - pango
+    - imlib2
+    - librsvg
+    - libsm
     script:
       - "makepkg -s"
 script:
