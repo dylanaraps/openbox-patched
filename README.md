@@ -1,6 +1,6 @@
 # openbox-patched
 
-This repo contains a `PKGBUILD` and various patches for Openbox `3.6.2`. The purpose of this repo is to track issues and fix quirks with the Rounded Corners patch.
+This repo contains various patches for Openbox `3.6.2`. The purpose of this repo is to track issues and fix quirks with the Rounded Corners patch.
 
 
 ![scrot](http://i.imgur.com/ThihqTS.png)
