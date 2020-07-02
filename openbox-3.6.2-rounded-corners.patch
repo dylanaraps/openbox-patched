@@ -107,7 +107,7 @@ index 89669726..1539717c 100644
          if (resized) {
              self->need_render = TRUE;
 -            framerender_frame(self);
-             frame_adjust_shape(self);
++             frame_round_corners(self);
          }
 
 @@ -884,7 +928,9 @@ void frame_adjust_area(ObFrame *self, gboolean moved,
